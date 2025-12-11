@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>NEON RED • Магазин киберпанк товаров</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔴</text></svg>">
+</head>
+<body>
+    <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+    <!-- Бургер меню для мобильных -->
+    <div id="mobile-menu-btn" class="mobile-menu-btn">
+        <span></span>
+        <span></span>
+        <span></span>
+    </div>
+
+    <!-- Мобильная навигация -->
+    <div id="mobile-nav" class="mobile-nav">
+        <div class="mobile-nav-header">
+            <h3>NEON RED</h3>
+            <button class="mobile-close">×</button>
+        </div>
+        <nav class="mobile-nav-links">
+            <a href="#" onclick="loadProducts(); closeMobileNav()">Все товары</a>
+            <a href="#" onclick="loadProducts('Одежда'); closeMobileNav()">Одежда</a>
+            <a href="#" onclick="loadProducts('Электроника'); closeMobileNav()">Электроника</a>
+            <a href="#" onclick="loadProducts('Обувь'); closeMobileNav()">Обувь</a>
+            <a href="#" onclick="loadProducts('Аксессуары'); closeMobileNav()">Аксессуары</a>
+            <div id="mobile-categories"></div>
+            <div class="mobile-user-section">
+                <button id="mobile-auth-btn" onclick="openAuthModal(); closeMobileNav()">Войти</button>
+                <button id="mobile-profile-btn" onclick="openProfileModal(); closeMobileNav()" style="display: none;">Профиль</button>
+                <button id="mobile-admin-btn" onclick="openAdminPanel(); closeMobileNav()" style="display: none;">Админ-панель</button>
+            </div>
+        </nav>
+    </div>
+
+    <!-- Модалка авторизации -->
+    <div id="auth-modal" class="modal" role="dialog" aria-hidden="true">
+        <div class="modal-content">
+            <button class="close" onclick="closeAuthModal()">×</button>
+            <h2 id="auth-title">Вход</h2>
+
+            <form id="login-form" class="auth-form" style="display: block;">
+                <input type="text" placeholder="Имя пользователя" id="login-username" required>
+                <input type="password" placeholder="Пароль" id="login-password" required>
+                <button type="submit" class="auth-btn">Войти</button>
+                <p style="text-align: center; margin-top: 20px;">
+                    Нет аккаунта? 
+                    <a href="#" onclick="showRegisterForm()">Зарегистрироваться</a>
+                </p>
+            </form>
+
+            <form id="register-form" class="auth-form" style="display: none;">
+                <input type="text" placeholder="Имя пользователя" id="register-username" required>
+                <input type="email" placeholder="Email" id="register-email" required>
+                <input type="text" placeholder="Полное имя" id="register-fullname">
+                <input type="password" placeholder="Пароль" id="register-password" required>
+                <input type="password" placeholder="Повторите пароль" id="register-password2" required>
+                <button type="submit" class="auth-btn">Зарегистрироваться</button>
+                <p style="text-align: center; margin-top: 20px;">
+                    Уже есть аккаунт? 
+                    <a href="#" onclick="showLoginForm()">Войти</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модалка профиля -->
+    <div id="profile-modal" class="modal" role="dialog" aria-hidden="true">
+        <div class="modal-content">
+            <button class="close" onclick="closeProfileModal()">×</button>
+            <h2>Ваш профиль</h2>
+            <div id="profile-info">
+                <p><strong>Имя пользователя:</strong> <span id="profile-username"></span></p>
+                <p><strong>Email:</strong> <span id="profile-email"></span></p>
+                <p><strong>Полное имя:</strong> <span id="profile-fullname"></span></p>
+                <p id="profile-isadmin" style="display: none;"><strong>Статус:</strong> Администратор</p>
+                <div id="profile-orders">
+                    <h3>Ваши заказы</h3>
+                    <div id="orders-list"></div>
+                </div>
+                <button onclick="logout()" class="logout-btn">Выйти</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модалка админ-панели -->
+    <div id="admin-modal" class="modal" role="dialog" aria-hidden="true">
+        <div class="modal-content" style="max-width: 900px; max-height: 90vh;">
+            <button class="close" onclick="closeAdminPanel()">×</button>
+            <h2>Админ-панель</h2>
+            
+            <div class="admin-tabs">
+                <button class="admin-tab active" onclick="switchAdminTab('products')">Товары</button>
+                <button class="admin-tab" onclick="switchAdminTab('categories')">Категории</button>
+                <button class="admin-tab" onclick="switchAdminTab('users')">Пользователи</button>
+                <button class="admin-tab" onclick="switchAdminTab('orders')">Заказы</button>
+            </div>
+            
+            <div id="products-tab" class="admin-tab-content active">
+                <div class="admin-section">
+                    <h3>Управление товарами 
+                        <button onclick="addNewProduct()" class="admin-btn">+ Добавить товар</button>
+                    </h3>
+                    <div id="admin-products-list"></div>
+                </div>
+            </div>
+            
+            <div id="categories-tab" class="admin-tab-content">
+                <div class="admin-section">
+                    <h3>Управление категориями 
+                        <button onclick="addNewCategory()" class="admin-btn">+ Добавить категорию</button>
+                    </h3>
+                    <div id="admin-categories-list"></div>
+                </div>
+            </div>
+            
+            <div id="users-tab" class="admin-tab-content">
+                <div class="admin-section">
+                    <h3>Пользователи</h3>
+                    <div id="admin-users-list"></div>
+                </div>
+            </div>
+            
+            <div id="orders-tab" class="admin-tab-content">
+                <div class="admin-section">
+                    <h3>Заказы</h3>
+                    <div id="admin-orders-list"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модалка редактирования товара -->
+    <div id="edit-product-modal" class="modal" role="dialog" aria-hidden="true">
+        <div class="modal-content">
+            <button class="close" onclick="closeEditProductModal()">×</button>
+            <h2>Редактировать товар</h2>
+            <form id="edit-product-form" class="admin-form">
+                <input type="hidden" id="edit-product-id">
+                <input type="text" placeholder="Название товара" id="edit-product-title" required>
+                <textarea placeholder="Описание товара" id="edit-product-description"></textarea>
+                <input type="number" step="0.01" placeholder="Цена" id="edit-product-price" required>
+                <input type="number" placeholder="Количество" id="edit-product-quantity" required>
+                <select id="edit-product-category" required>
+                    <option value="">Выберите категорию</option>
+                </select>
+                <div class="admin-form-actions">
+                    <button type="button" class="secondary-btn" onclick="closeEditProductModal()">Отмена</button>
+                    <button type="submit" class="admin-btn">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Модалка добавления товара -->
+    <div id="add-product-modal" class="modal" role="dialog" aria-hidden="true">
+        <div class="modal-content">
+            <button class="close" onclick="closeAddProductModal()">×</button>
+            <h2>Добавить товар</h2>
+            <form id="add-product-form" class="admin-form">
+                <input type="text" placeholder="Название товара" id="new-product-title" required>
+                <textarea placeholder="Описание товара" id="new-product-description"></textarea>
+                <input type="number" step="0.01" placeholder="Цена" id="new-product-price" required>
+                <input type="number" placeholder="Количество" id="new-product-quantity" required>
+                <select id="new-product-category" required>
+                    <option value="">Выберите категорию</option>
+                </select>
+                <input type="text" placeholder="URL изображения" id="new-product-image">
+                <div class="admin-form-actions">
+                    <button type="button" class="secondary-btn" onclick="closeAddProductModal()">Отмена</button>
+                    <button type="submit" class="admin-btn">Создать товар</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <header>
+        <div class="container">
+            <div class="header-top">
+                <h1>NEON RED</h1>
+                <div class="desktop-user-controls">
+                    <button id="auth-btn" onclick="openAuthModal()">Войти</button>
+                    <button id="profile-btn" onclick="openProfileModal()" style="display: none;">Профиль</button>
+                    <button id="admin-btn" onclick="openAdminPanel()" style="display: none;">Админ-панель</button>
+                </div>
+            </div>
+
+            <div class="nav-container">
+                <nav class="desktop-nav">
+                    <a href="#" onclick="loadProducts()">Все товары</a>
+                    <a href="#" onclick="loadProducts('Одежда')">Одежда</a>
+                    <a href="#" onclick="loadProducts('Электроника')">Электроника</a>
+                    <a href="#" onclick="loadProducts('Обувь')">Обувь</a>
+                    <a href="#" onclick="loadProducts('Аксессуары')">Аксессуары</a>
+                    <div id="desktop-categories"></div>
+                </nav>
+                <div class="cart">
+                    <div class="cart-info">
+                        <span>Корзина: <strong id="cart-count">0</strong> шт.</span>
+                        <span>Сумма: <strong id="cart-total">0</strong> ₽</span>
+                    </div>
+                    <button id="cart-btn" aria-label="Открыть корзину">
+                        <span class="cart-icon">🛒</span>
+                        <span class="cart-text">Корзина</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="products" id="products" role="list" aria-label="Список товаров">
+            <!-- Товары загружаются через API -->
+        </div>
+    </main>
+
+    <!-- Модальное окно корзины -->
+    <div id="cart-modal" class="modal" role="dialog" aria-labelledby="cart-title" aria-hidden="true">
+        <div class="modal-content">
+            <button class="close" onclick="closeCartModal()">×</button>
+            <h2 id="cart-title">Ваша корзина</h2>
+            <div id="cart-items"></div>
+            <div class="cart-footer">
+                <p>Итого: <strong id="cart-total-modal">0 ₽</strong></p>
+                <div class="cart-buttons">
+                    <button id="clear-cart" class="secondary-btn">Очистить</button>
+                    <button id="checkout" onclick="checkout()">Оформить заказ</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>© 2024 NEON RED • Киберпанк магазин</p>
+            <p>Телефон поддержки: +7 (XXX) XXX-XX-XX</p>
+        </div>
+    </footer>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>
