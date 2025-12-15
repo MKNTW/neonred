@@ -113,8 +113,6 @@ onMounted(async () => {
   document.addEventListener('visibilitychange', visibilityHandler)
 })
 
-import { onUnmounted } from 'vue'
-
 onUnmounted(() => {
   if (syncInterval) {
     clearInterval(syncInterval)
