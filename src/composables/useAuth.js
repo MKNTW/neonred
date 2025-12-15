@@ -27,8 +27,12 @@ export function useAuth() {
   function saveAuth(userData, authToken) {
     user.value = userData
     token.value = authToken
-    localStorage.setItem('user', JSON.stringify(userData))
-    localStorage.setItem('token', authToken)
+    try {
+      localStorage.setItem('user', JSON.stringify(userData))
+      localStorage.setItem('token', authToken)
+    } catch (e) {
+      // Ошибка сохранения в localStorage
+    }
   }
 
   function clearAuth() {

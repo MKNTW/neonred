@@ -141,6 +141,8 @@ function handlePageChange(page) {
 watch(isAuthenticated, async (newVal, oldVal) => {
   if (newVal && !oldVal) {
     // Пользователь только что вошел - загружаем товары и синхронизируем корзину
+    // Небольшая задержка чтобы убедиться что токен обновился в реактивном состоянии
+    await new Promise(resolve => setTimeout(resolve, 50))
     await loadProducts(1, false)
     syncCart()
   } else if (!newVal && oldVal) {
@@ -151,8 +153,8 @@ watch(isAuthenticated, async (newVal, oldVal) => {
 
 async function handleAuthSuccess() {
   // Немедленная загрузка товаров после успешной авторизации
-  // Используем nextTick чтобы убедиться что isAuthenticated обновился
-  await new Promise(resolve => setTimeout(resolve, 100))
+  // Используем nextTick чтобы убедиться что реактивное состояние обновилось
+  await new Promise(resolve => setTimeout(resolve, 50))
   await loadProducts(1, false)
   syncCart()
 }

@@ -1,5 +1,6 @@
 import { ref } from 'vue'
 import { useToast } from './useToast'
+import { useAuth } from './useAuth'
 
 // Определяем API URL в зависимости от окружения
 function getApiBaseUrl() {
@@ -26,6 +27,7 @@ const RETRY_DELAY_MS = 1000
 
 export function useApi() {
   const { showToast } = useToast()
+  const { token } = useAuth()
   const loading = ref(false)
 
   async function safeFetch(url, options = {}) {
@@ -113,7 +115,9 @@ export function useApi() {
 
   async function request(endpoint, options = {}, retryCount = 0) {
     const url = `${API_BASE_URL}${endpoint}`
-    const token = localStorage.getItem('token')
+    // Используем токен из useAuth (реактивный), а не из localStorage напрямую
+    // Это гарантирует, что токен всегда актуален
+    const authToken = token.value
     const maxRetries = options.maxRetries !== undefined ? options.maxRetries : 1
     
     // Для FormData не устанавливаем Content-Type, браузер сделает это сам
@@ -125,8 +129,8 @@ export function useApi() {
           ...options.headers
         }
 
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`
+    if (authToken) {
+      headers['Authorization'] = `Bearer ${authToken}`
     }
 
     try {
