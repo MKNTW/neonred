@@ -2,27 +2,45 @@ import { ref, computed } from 'vue'
 import { useApi } from './useApi'
 import { useToast } from './useToast'
 
-export function useAuth() {
-  const { request } = useApi()
-  const { showToast } = useToast()
+// Singleton для аутентификации - все компоненты используют одно состояние
+let authInstance = null
+let userInstance = null
+let tokenInstance = null
 
-  // Безопасная загрузка из localStorage
-  let initialUser = null
-  let initialToken = null
-  try {
-    const savedUser = localStorage.getItem('user')
-    if (savedUser) {
-      initialUser = JSON.parse(savedUser)
+export function useAuth() {
+  // Используем singleton pattern для единого состояния аутентификации
+  if (!authInstance) {
+    // Безопасная загрузка из localStorage
+    let initialUser = null
+    let initialToken = null
+    try {
+      const savedUser = localStorage.getItem('user')
+      if (savedUser) {
+        initialUser = JSON.parse(savedUser)
+      }
+      initialToken = localStorage.getItem('token')
+    } catch (e) {
+      // Игнорируем ошибки парсинга
     }
-    initialToken = localStorage.getItem('token')
-  } catch (e) {
-    // Игнорируем ошибки парсинга
+    
+    userInstance = ref(initialUser)
+    tokenInstance = ref(initialToken)
+    
+    authInstance = {
+      user: userInstance,
+      token: tokenInstance,
+      isAuthenticated: computed(() => !!userInstance.value && !!tokenInstance.value),
+      isAdmin: computed(() => userInstance.value?.isAdmin || false)
+    }
   }
   
-  const user = ref(initialUser)
-  const token = ref(initialToken)
-  const isAuthenticated = computed(() => !!user.value && !!token.value)
-  const isAdmin = computed(() => user.value?.isAdmin || false)
+  const { request } = useApi()
+  const { showToast } = useToast()
+  
+  const user = authInstance.user
+  const token = authInstance.token
+  const isAuthenticated = authInstance.isAuthenticated
+  const isAdmin = authInstance.isAdmin
 
   function saveAuth(userData, authToken) {
     // Сначала сохраняем в localStorage (синхронно)
@@ -32,8 +50,7 @@ export function useAuth() {
     } catch (e) {
       // Ошибка сохранения в localStorage
     }
-    // Затем обновляем реактивное состояние
-    // Это гарантирует, что токен будет доступен в useApi до обновления реактивности
+    // Затем обновляем реактивное состояние (singleton - обновится везде)
     user.value = userData
     token.value = authToken
   }
@@ -41,8 +58,12 @@ export function useAuth() {
   function clearAuth() {
     user.value = null
     token.value = null
-    localStorage.removeItem('user')
-    localStorage.removeItem('token')
+    try {
+      localStorage.removeItem('user')
+      localStorage.removeItem('token')
+    } catch (e) {
+      // Игнорируем ошибки
+    }
   }
 
   async function login(usernameOrEmail, password) {
@@ -108,4 +129,3 @@ export function useAuth() {
     clearAuth
   }
 }
-
