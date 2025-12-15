@@ -1,0 +1,173 @@
+/* NEON RED — киберпанк магазин 2025 (Vue 3 версия) */
+
+@import url('https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700;800;900&display=swap');
+
+* { 
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box; 
+    -webkit-tap-highlight-color: rgba(255, 0, 51, 0.2);
+}
+
+:root {
+    --neon-red: #ff0033;
+    --neon-pink: #ff3366;
+    --neon-blue: #0099ff;
+    --neon-green: #00ff88;
+    --neon-purple: #9933ff;
+    --dark-bg: #000;
+    --darker-bg: #0a0a0a;
+    --card-bg: #0f0f0f;
+    --border-color: #222;
+    --text-primary: #fff;
+    --text-secondary: #ccc;
+    --text-muted: #666;
+    --safe-area-inset-top: env(safe-area-inset-top);
+    --safe-area-inset-bottom: env(safe-area-inset-bottom);
+}
+
+html {
+    font-size: 16px;
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+body {
+    font-family: 'Exo 2', 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--dark-bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    background-image: 
+        radial-gradient(circle at 20% 80%, rgba(120, 0, 30, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(255, 0, 51, 0.15) 0%, transparent 50%);
+    line-height: 1.6;
+    padding-top: var(--safe-area-inset-top);
+    padding-bottom: var(--safe-area-inset-bottom);
+    overflow-x: hidden;
+    width: 100%;
+}
+
+.container { 
+    max-width: 1280px; 
+    margin: 0 auto; 
+    padding: 0 16px; 
+    width: 100%;
+    position: relative;
+}
+
+/* Утилиты */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* Единые стили для кнопок */
+.primary-btn,
+.auth-btn.primary-btn,
+.admin-btn:not(.delete-btn):not(.secondary-btn) {
+    background: var(--neon-red);
+    color: white;
+    border: none;
+    padding: 14px 24px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-family: inherit;
+}
+
+.primary-btn:hover:not(:disabled),
+.auth-btn.primary-btn:hover:not(:disabled),
+.admin-btn:hover:not(:disabled):not(.delete-btn) {
+    background: var(--neon-pink);
+    box-shadow: 0 0 20px rgba(255, 0, 51, 0.5);
+    transform: translateY(-2px);
+}
+
+.primary-btn:disabled,
+.auth-btn.primary-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.secondary-btn,
+.auth-btn.secondary-btn {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    border: 2px solid var(--border-color);
+    padding: 14px 24px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-family: inherit;
+}
+
+.secondary-btn:hover:not(:disabled),
+.auth-btn.secondary-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: var(--neon-red);
+    box-shadow: 0 0 15px rgba(255, 0, 51, 0.3);
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .container {
+        padding: 0 12px;
+    }
+    
+    header {
+        padding: 15px 0;
+    }
+    
+    .header-top-new {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    
+    .header-controls {
+        flex-wrap: wrap;
+    }
+    
+    .header-btn {
+        padding: 8px 14px;
+        font-size: 0.9rem;
+    }
+    
+    .products {
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 16px;
+    }
+    
+    .modal-content {
+        padding: 20px;
+        max-width: 95%;
+    }
+}
+
+@media (max-width: 480px) {
+    .products {
+        grid-template-columns: 1fr;
+    }
+    
+    .header-btn .btn-text {
+        display: none;
+    }
+    
+    .logo-animated {
+        font-size: 1.5rem;
+    }
+}
+
