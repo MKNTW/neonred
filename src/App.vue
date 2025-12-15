@@ -72,6 +72,7 @@ const showAdminModal = ref(false)
 const showForgotPasswordModal = ref(false)
 
 let syncInterval = null
+let productsUpdateInterval = null
 let visibilityHandler = null
 
 onMounted(async () => {
@@ -93,19 +94,43 @@ onMounted(async () => {
     }, 30000)
   }
   
+  // Периодическое обновление товаров (каждые 15 секунд, только если страница видима)
+  // Это нужно для синхронизации изменений из админ панели
+  const startProductsUpdateInterval = () => {
+    if (productsUpdateInterval) clearInterval(productsUpdateInterval)
+    productsUpdateInterval = setInterval(() => {
+      if (isAuthenticated.value && document.visibilityState === 'visible') {
+        // Обновляем товары на текущей странице без показа loading (silent mode)
+        loadProducts(currentPage.value, false, true).catch(() => {
+          // Игнорируем ошибки при фоновом обновлении
+        })
+      }
+    }, 15000) // Обновляем каждые 15 секунд
+  }
+  
   startSyncInterval()
+  startProductsUpdateInterval()
   
   // Останавливаем синхронизацию при скрытии страницы
   visibilityHandler = () => {
     if (document.visibilityState === 'visible') {
       startSyncInterval()
+      startProductsUpdateInterval()
       if (isAuthenticated.value) {
         syncCart(true) // Синхронизируем при возврате на страницу
+        // Обновляем товары при возврате на страницу (silent mode)
+        loadProducts(currentPage.value, false, true).catch(() => {
+          // Игнорируем ошибки
+        })
       }
     } else {
       if (syncInterval) {
         clearInterval(syncInterval)
         syncInterval = null
+      }
+      if (productsUpdateInterval) {
+        clearInterval(productsUpdateInterval)
+        productsUpdateInterval = null
       }
     }
   }
@@ -117,6 +142,10 @@ onUnmounted(() => {
   if (syncInterval) {
     clearInterval(syncInterval)
     syncInterval = null
+  }
+  if (productsUpdateInterval) {
+    clearInterval(productsUpdateInterval)
+    productsUpdateInterval = null
   }
   if (visibilityHandler) {
     document.removeEventListener('visibilitychange', visibilityHandler)

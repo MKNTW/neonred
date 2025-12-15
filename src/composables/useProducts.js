@@ -11,32 +11,48 @@ export function useProducts() {
   const totalPages = ref(1)
   const totalProducts = ref(0)
 
-  async function loadProducts(page = 1, useCache = false) {
+  async function loadProducts(page = 1, useCache = false, silent = false) {
     try {
-      loading.value = true
+      if (!silent) {
+        loading.value = true
+      }
       const data = await request(`/products?page=${page}&limit=20`)
 
       if (data.products) {
-        products.value = data.products
-        currentPage.value = data.page || page
-        totalPages.value = data.totalPages || 1
-        totalProducts.value = data.total || data.products.length
+        // Обновляем только если данные действительно изменились
+        // Это предотвращает ненужные перерисовки при фоновом обновлении
+        const newProducts = data.products
+        const hasChanges = JSON.stringify(products.value) !== JSON.stringify(newProducts)
+        
+        if (hasChanges) {
+          products.value = newProducts
+          currentPage.value = data.page || page
+          totalPages.value = data.totalPages || 1
+          totalProducts.value = data.total || data.products.length
+        }
       } else {
-        products.value = Array.isArray(data) ? data : []
-        currentPage.value = 1
-        totalPages.value = 1
-        totalProducts.value = Array.isArray(data) ? data.length : 0
+        const newProducts = Array.isArray(data) ? data : []
+        const hasChanges = JSON.stringify(products.value) !== JSON.stringify(newProducts)
+        
+        if (hasChanges) {
+          products.value = newProducts
+          currentPage.value = 1
+          totalPages.value = 1
+          totalProducts.value = Array.isArray(data) ? data.length : 0
+        }
       }
 
       return true
     } catch (error) {
       // Не показываем toast для ошибок подключения (уже показан в useApi)
-      if (!error.isConnectionError) {
+      if (!error.isConnectionError && !silent) {
         showToast(error.message || 'Ошибка загрузки товаров', 'error')
       }
       return false
     } finally {
-      loading.value = false
+      if (!silent) {
+        loading.value = false
+      }
     }
   }
 

@@ -56,37 +56,54 @@ export function useCart() {
     }
   }
 
-  async function addToCart(product) {
-    // Синхронизируем актуальное количество с сервером
-    const actualQuantity = await syncProductQuantity(product.id)
-    const maxQuantity = actualQuantity !== null ? actualQuantity : product.quantity
-    
-    const existing = cart.value.find(i => i.id === product.id)
+  // Флаг для предотвращения одновременного добавления одного товара
+  const addingProducts = new Set()
 
-    if (existing) {
-      // Обновляем максимальное количество из актуальных данных
-      existing.maxQuantity = maxQuantity
-      
-      if (existing.quantity >= maxQuantity) {
-        showToast(`Нельзя добавить больше, чем есть в наличии (${maxQuantity})`, 'error')
-        return
-      }
-      existing.quantity += 1
-      showToast(`+1 × ${product.title}`, 'success', 2000)
-    } else {
-      cart.value.push({ 
-        ...product, 
-        quantity: 1,
-        maxQuantity: maxQuantity // Сохраняем актуальное количество
-      })
-      showToast(`${product.title} добавлен в корзину!`, 'success', 2500)
+  async function addToCart(product) {
+    // Защита от двойного добавления - проверяем, не добавляется ли уже этот товар
+    if (addingProducts.has(product.id)) {
+      return // Уже добавляется, игнорируем повторный клик
     }
 
-    saveCart()
+    addingProducts.add(product.id)
 
-    // Вибрация на мобильных
-    if ('vibrate' in navigator) {
-      navigator.vibrate([50, 30, 50])
+    try {
+      // Синхронизируем актуальное количество с сервером
+      const actualQuantity = await syncProductQuantity(product.id)
+      const maxQuantity = actualQuantity !== null ? actualQuantity : product.quantity
+      
+      const existing = cart.value.find(i => i.id === product.id)
+
+      if (existing) {
+        // Обновляем максимальное количество из актуальных данных
+        existing.maxQuantity = maxQuantity
+        
+        if (existing.quantity >= maxQuantity) {
+          showToast(`Нельзя добавить больше, чем есть в наличии (${maxQuantity})`, 'error')
+          return
+        }
+        existing.quantity += 1
+        showToast(`+1 × ${product.title}`, 'success', 2000)
+      } else {
+        cart.value.push({ 
+          ...product, 
+          quantity: 1,
+          maxQuantity: maxQuantity // Сохраняем актуальное количество
+        })
+        showToast(`${product.title} добавлен в корзину!`, 'success', 2500)
+      }
+
+      saveCart()
+
+      // Вибрация на мобильных
+      if ('vibrate' in navigator) {
+        navigator.vibrate([50, 30, 50])
+      }
+    } finally {
+      // Убираем блокировку через небольшую задержку (500ms)
+      setTimeout(() => {
+        addingProducts.delete(product.id)
+      }, 500)
     }
   }
 

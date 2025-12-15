@@ -29,12 +29,12 @@
       </div>
       <button
         @click="handleAddToCart"
-        :disabled="!product?.quantity || product.quantity === 0"
+        :disabled="!product?.quantity || product.quantity === 0 || isAdding"
         class="product-btn"
-        :class="{ 'product-btn-disabled': !product?.quantity || product.quantity === 0 }"
+        :class="{ 'product-btn-disabled': !product?.quantity || product.quantity === 0 || isAdding }"
         aria-label="Добавить в корзину"
       >
-        {{ product?.quantity && product.quantity > 0 ? 'В корзину' : 'Нет в наличии' }}
+        {{ isAdding ? 'Добавление...' : (product?.quantity && product.quantity > 0 ? 'В корзину' : 'Нет в наличии') }}
       </button>
     </div>
   </div>
@@ -59,6 +59,7 @@ const emit = defineEmits(['add-to-cart'])
 
 const { addToCart } = useCart()
 const imageError = ref(false)
+const isAdding = ref(false) // Флаг для блокировки кнопки во время добавления
 
 // Lazy loading для изображений - загружаем только первые 6 сразу
 const shouldLoadImage = computed(() => props.index < 6)
@@ -80,11 +81,19 @@ function formatPrice(price) {
   return num.toFixed(2)
 }
 
-function handleAddToCart() {
+async function handleAddToCart() {
   const quantity = Number(props.product?.quantity) || 0
-  if (quantity > 0) {
-    addToCart(props.product)
-    emit('add-to-cart', props.product)
+  if (quantity > 0 && !isAdding.value) {
+    isAdding.value = true
+    try {
+      await addToCart(props.product)
+      emit('add-to-cart', props.product)
+    } finally {
+      // Снимаем блокировку через небольшую задержку
+      setTimeout(() => {
+        isAdding.value = false
+      }, 500)
+    }
   }
 }
 </script>
