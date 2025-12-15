@@ -86,7 +86,7 @@ defineProps({
 }
 
 .step-line {
-  width: 40px;
+  width: 28px;
   height: 2px;
   background: var(--border-color);
   transition: all 0.3s;
