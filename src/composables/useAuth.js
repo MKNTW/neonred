@@ -40,13 +40,14 @@ export function useAuth() {
 
   async function login(usernameOrEmail, password) {
     try {
+      const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(usernameOrEmail)
+      const requestBody = isEmail 
+        ? { email: usernameOrEmail.trim(), password }
+        : { username: usernameOrEmail.trim(), password }
+      
       const data = await request('/login', {
         method: 'POST',
-        body: JSON.stringify({
-          username: usernameOrEmail,
-          email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(usernameOrEmail) ? usernameOrEmail : undefined,
-          password
-        })
+        body: JSON.stringify(requestBody)
       })
 
       if (data.user && data.token) {
@@ -57,6 +58,10 @@ export function useAuth() {
 
       return false
     } catch (error) {
+      // Для ошибок 401 показываем понятное сообщение
+      if (error.status === 401) {
+        showToast('Неверное имя пользователя или пароль', 'error')
+      }
       // Не показываем дополнительный toast для ошибок подключения
       // (уже показан в useApi)
       return false
