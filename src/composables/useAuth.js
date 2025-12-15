@@ -25,14 +25,17 @@ export function useAuth() {
   const isAdmin = computed(() => user.value?.isAdmin || false)
 
   function saveAuth(userData, authToken) {
-    user.value = userData
-    token.value = authToken
+    // Сначала сохраняем в localStorage (синхронно)
     try {
       localStorage.setItem('user', JSON.stringify(userData))
       localStorage.setItem('token', authToken)
     } catch (e) {
       // Ошибка сохранения в localStorage
     }
+    // Затем обновляем реактивное состояние
+    // Это гарантирует, что токен будет доступен в useApi до обновления реактивности
+    user.value = userData
+    token.value = authToken
   }
 
   function clearAuth() {
